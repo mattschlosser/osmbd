@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <canvas id="hello" width="1200" height="600"></canvas>
+  <script>
+    let canvas = document.querySelector("#hello");
+    let ctx = canvas.getContext('2d');
+    ctx.fillRect(20,20,20,20);
+    // ctx/fillArc(600/2, 400/2, 
+    // ctx.beginPath();
+    // ctx.strokeStyle = 'black';
+    // ctx.moveTo(600/2, 400/2);
+    // ctx.lineTo(600/2, 400/2-50);
+    // ctx.stroke();
+
+    // ctx.beginPath();
+    // ctx.arc(600/2, 400/2, 10, 0, 6.28);
+    // ctx.fill();
+    function color(rad) {
+      red = Math.floor(rad/6.28*255);
+      green = 0;
+      // green = Math.floor((rad+0.33)/6.28*255/3);
+      blue = Math.floor((rad+0.67)/6.28*255);
+      return `rgb(${red}, ${green}, ${blue})`;
+    }
+
+    function draw(n, o = 0, name = "") {
+      ctx.clearRect(0,0,1200,600);
+      // let color = 0;
+      let people = Object.keys(n);
+      let N = Object.keys(n).length;
+      let rads = 6.28/N;  
+      ctx.fillStyle = "#000000";
+      ctx.textAlign = "center";
+      ctx.fillText(name, 1200/2, 600/2);
+      for (let i = 0; i < N; i++) {
+        // console.log(i);
+        // console.log(color(rads*i*o))
+        let x = 1200/2-(100+(60*(i%32!=0))+(70*(i%16!=0))+(80*(i%8!=0))+(90*(i%4!=0))+(150*(i%2!=0)))*Math.sin(rads*i+o);
+        let y = 600/2-(100+(60*(i%32!=0))+(70*(i%16!=0))+(80*(i%8!=0))+(90*(i%4!=0))+(150*(i%2!=0)))*Math.cos(rads*i+o);
+        ctx.fillStyle = color(rads*i+o);
+        // ctx.beginPath();
+        // ctx.moveTo(1200/2, 600/2);
+        // ctx.lineTo(x,y);
+        // ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 6.28);
+        ctx.fill();
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = 'left';
+        ctx.fillText(people[i], x+15, y+4);
+      }
+    }
+
+    let i = 0;
+    let tom_hanks = {
+      "Whatever": {},
+      "Whoever": {},
+      "Whenever": {}
+    };
+    // draw(24, 3);
+fetch('./data.txt').then(e => e.text()).then(buffer => {
+  let movies = buffer.split('\n').map((e,i) => {
+    i % 1000 || console.log(i);
+    try {
+      return JSON.parse(e);
+    } catch (f) {
+      console.log(e)
+      return {};
+    }
+  })
+  console.log(movies.length);
+  let cast = {};
+  movies.forEach((e,i) => {
+    // i % 1000 || console.log(e);
+    e.cast && e.cast.forEach(castMember => {
+      // castMember == "Tom Hanks" && console.log(e)
+      cast[castMember] || (cast[castMember] = {});
+    });
+  })
+  // movies.forEach((e,i) => {
+  //   i % 1000 || console.log(i);
+  //   e.cast && e.cast.forEach(castMember => {
+  //     e.cast.forEach(friend => friend != castMember && (cast[castMember][friend] || (cast[castMember][friend] = cast[friend]) && (cast[friend][castMember] || (cast[friend][castMember] = cast[castMember]))))
+  //     // cast[castMember] || (cast[castMember] = {});
+  //   });
+  // })
+function getChildren(actor) {
+  if (!cast[actor]) {
+    // console.log("Actor not in database");
+    return;
+  }
+  // if (cast[actor]) {
+  //   Object.keys(cast[actor]).forEach(e=>console.dir(e, {depth: null}));
+  //   // console.log(cast[actor].friends);
+  //   // console.log("Cache hit");
+  //   return;
+  // }
+  let children = cast[actor];
+  movies.forEach(movie => {
+    movie.cast && movie.cast.forEach(castMember => {
+      castMember == actor && movie.cast.forEach(castMember => castMember  && castMember != actor && (children[castMember] || (children[castMember] = cast[castMember])))
+    })
+  });
+  // Object.keys(children).forEach(e=>console.log(e));
+  // console.log("Cache miss");
+  // cast[actor] = children;
+}
+  getChildren("Barack Obama");
+console.log(cast["Tom Hanks"])
+function who(x,y) {
+  return 
+}
+  let name = "Barack Obama"
+  let current = cast[name];
+  let k = setInterval(() => { draw(current,i, name); i+=6.28/9000 }, 1000/60);
+  canvas.onclick = (e) => {
+    // clearInterval(k);
+    // console.log(Object.keys(current)[0])
+    let keys = Object.keys(current);
+    let r = Math.floor(Math.random()*keys.length);
+    let next = keys[r];
+    getChildren(next);
+    name = next;
+    current = cast[next];
+    // console.log(current);
+  };
+});
+
+  </script>
+</body>
+</html>
